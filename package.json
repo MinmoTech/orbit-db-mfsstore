@@ -1,12 +1,12 @@
 {
-  "name": "orbit-db-kvstore",
-  "version": "1.8.0",
-  "description": "Key-Value Store for orbit-db",
-  "main": "src/KeyValueStore.js",
-  "homepage": "https://github.com/orbitdb/orbit-db-kvstore",
-  "bugs": "https://github.com/orbitdb/orbit-db-kvstore/issues",
+  "name": "orbit-db-mfsstore",
+  "version": "0.0.1",
+  "description": "MFS backed Key-Value Store for orbit-db",
+  "main": "src/MfsStore.js",
+  "homepage": "https://gitlab.com/ptoner/orbit-db-mfsstore",
+  "bugs": "https://gitlab.com/ptoner/orbit-db-mfsstore/issues",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha --timeout 100000"
   },
   "keywords": [
     "orbit-db",
@@ -15,7 +15,7 @@
     "key-value",
     "kv-store"
   ],
-  "author": "Haad",
+  "author": "Patrick Toner",
   "contributors": [
     "haadcode",
     "greenkeeperio-bot",
@@ -26,11 +26,12 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "orbit-db-store": "~3.1.0"
+    "orbit-db-store": "~3.1.0",
+    "it-to-buffer": "1.0.2"
   },
-  "localMaintainers": [
-    "haad <haad@haja.io>",
-    "shamb0t <shams@haja.io>",
-    "hajamark <mark@haja.io>"
-  ]
+  "devDependencies": {
+    "ipfs": "0.43.0",
+    "mocha": "7.1.2",
+    "orbit-db": "0.23.1"
+  }
 }
