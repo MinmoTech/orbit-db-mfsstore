@@ -11,6 +11,8 @@ const IPFS = require('ipfs')
 describe('MfsStore', async () => {
 
     let store
+    let ipfs 
+    let orbitdb
 
     before('Setup', async () => {
 
@@ -18,12 +20,12 @@ describe('MfsStore', async () => {
         OrbitDB.addDatabaseType("mfsstore", MfsStore)
 
         
-        let ipfs = await IPFS.create({
+        ipfs = await IPFS.create({
             repo: './test/test-repos/' + Math.random().toString()
     
         })
 
-        let orbitdb = await OrbitDB.createInstance(ipfs)
+        orbitdb = await OrbitDB.createInstance(ipfs)
         store = await orbitdb.open("testtable", {
             create: true, 
             type: "mfsstore"
@@ -31,6 +33,25 @@ describe('MfsStore', async () => {
 
         await store.load()
     })
+
+
+
+    // it('should store without orbit', async () => {
+
+    //     for (let i=0; i< 1000; i++) {
+    //         console.log(`test ${i}`)
+            
+    //         let buffer = Buffer.from(JSON.stringify({
+    //             name: "test" + i
+    //         }))
+
+    //         await ipfs.files.write(`/test/${i}.json`, buffer, {
+    //           create: true,
+    //           parents: true
+    //         })
+    //     }
+
+    // })
 
 
 
@@ -77,21 +98,66 @@ describe('MfsStore', async () => {
 
     it('should put many items and read', async () => {
 
-        for (let i=0; i< 1000; i++) {
-            console.log(`putting ${i}`)
+        let kvstore = await orbitdb.open("testkv", {
+            create: true, 
+            type: "keyvalue"
+        })
+
+        console.time('Saving 100 records kvstore')
+        for (let i=0; i< 100; i++) {
+            await kvstore.put(i, {
+                id: i,
+                name: `Pat${i}`
+            })
+        }
+        console.timeEnd('Saving 100 records kvstore')
+
+        //Reload
+        console.time('Reload kvstore')
+        await kvstore.close()
+        await kvstore.load()
+        console.timeEnd('Reload kvstore')
+
+
+
+
+
+        //Act
+        console.time('Reading 100 records kvstore')
+        for (let i=0; i< 100; i++) {
+            let value = await kvstore.get(i)
+            assert.equal(value.name, `Pat${i}`)
+        }
+        console.timeEnd('Reading 100 records kvstore')
+
+
+
+
+
+
+        console.time('Saving 100 records mfsstore')
+        for (let i=0; i< 100; i++) {
             await store.put(i, {
                 id: i,
                 name: `Pat${i}`
             })
         }
+        console.timeEnd('Saving 100 records mfsstore')
 
         //Act
-        for (let i=0; i< 1000; i++) {
-            console.log(`getting ${i}`)
-
+        console.time('Reading 100 records mfsstore')
+        for (let i=0; i< 100; i++) {
             let value = await store.get(i)
             assert.equal(value.name, `Pat${i}`)
         }
+        console.timeEnd('Reading 100 records mfsstore')
+
+
+        //Reload
+        console.time('Reload mfsstore')
+        await store.close()
+        await store.load()
+        console.timeEnd('Reload mfsstore')
 
 
     })

@@ -47,31 +47,44 @@ class MfsStore extends Store {
     }, options)
   }
 
-  // async _updateIndex () {
-  //   this._recalculateReplicationMax()
-  //   await this._index.updateIndex(this._oplog)
-  //   this._recalculateReplicationProgress()
-  // }
+  async load(amount) {
 
-  // async _addOperation (data, { onProgressCallback, pin = false } = {}) {
-  //   async function addOperation () {
-  //     if (this._oplog) {
-  //       // check local cache?
-  //       if (this.options.syncLocal) {
-  //         await this.syncLocal()
-  //       }
+    //Load handled from MFS
+    await this._index.loadHandled()
 
-  //       const entry = await this._oplog.append(data, this.options.referenceCount, pin)
-  //       this._recalculateReplicationStatus(this.replicationStatus.progress + 1, entry.clock.time)
-  //       await this._cache.set(this.localHeadsPath, [entry])
-  //       await this._updateIndex()
-  //       this.events.emit('write', this.address.toString(), entry, this._oplog.heads)
-  //       if (onProgressCallback) onProgressCallback(entry)
-  //       return entry.hash
-  //     }
-  //   }
-  //   return this._opqueue.add(addOperation.bind(this))
-  // }
+    return super.load(amount)
+  }
+
+  async _updateIndex () {
+    this._recalculateReplicationMax()
+    await this._index.updateIndex(this._oplog)
+    this._recalculateReplicationProgress()
+  }
+
+  async _updateIndexEntry(entry) {
+    this._recalculateReplicationMax()
+    await this._index.handleItems([entry])
+    this._recalculateReplicationProgress()
+  }
+
+  async _addOperation (data, { onProgressCallback, pin = false } = {}) {
+    if (this._oplog) {
+      // check local cache?
+      if (this.options.syncLocal) {
+        await this.syncLocal()
+      }
+
+      const entry = await this._oplog.append(data, this.options.referenceCount, pin)
+      this._recalculateReplicationStatus(this.replicationStatus.progress + 1, entry.clock.time)
+      await this._cache.set(this.localHeadsPath, [entry])
+
+      await this._updateIndexEntry(entry)
+      
+      this.events.emit('write', this.address.toString(), entry, this._oplog.heads)
+      if (onProgressCallback) onProgressCallback(entry)
+      return entry.hash
+    }
+  }
 
 
 }
