@@ -1,0 +1,5 @@
+2020/05/01-20:50:52.212 10bc Recovering log #3
+2020/05/01-20:50:52.212 10bc Level-0 table #5: started
+2020/05/01-20:50:52.218 10bc Level-0 table #5: 74888 bytes OK
+2020/05/01-20:50:52.226 10bc Delete type=0 #3
+2020/05/01-20:50:52.226 10bc Delete type=3 #2

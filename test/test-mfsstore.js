@@ -98,59 +98,22 @@ describe('MfsStore', async () => {
 
     it('should put many items and read', async () => {
 
-        let kvstore = await orbitdb.open("testkv", {
-            create: true, 
-            type: "keyvalue"
-        })
-
-        console.time('Saving 100 records kvstore')
-        for (let i=0; i< 100; i++) {
-            await kvstore.put(i, {
-                id: i,
-                name: `Pat${i}`
-            })
-        }
-        console.timeEnd('Saving 100 records kvstore')
-
-        //Reload
-        console.time('Reload kvstore')
-        await kvstore.close()
-        await kvstore.load()
-        console.timeEnd('Reload kvstore')
-
-
-
-
-
-        //Act
-        console.time('Reading 100 records kvstore')
-        for (let i=0; i< 100; i++) {
-            let value = await kvstore.get(i)
-            assert.equal(value.name, `Pat${i}`)
-        }
-        console.timeEnd('Reading 100 records kvstore')
-
-
-
-
-
-
-        console.time('Saving 100 records mfsstore')
-        for (let i=0; i< 100; i++) {
+        console.time('Saving 200 records mfsstore')
+        for (let i=0; i< 200; i++) {
             await store.put(i, {
                 id: i,
                 name: `Pat${i}`
             })
         }
-        console.timeEnd('Saving 100 records mfsstore')
+        console.timeEnd('Saving 200 records mfsstore')
 
         //Act
-        console.time('Reading 100 records mfsstore')
-        for (let i=0; i< 100; i++) {
+        console.time('Reading 200 records mfsstore')
+        for (let i=0; i< 200; i++) {
             let value = await store.get(i)
             assert.equal(value.name, `Pat${i}`)
         }
-        console.timeEnd('Reading 100 records mfsstore')
+        console.timeEnd('Reading 200 records mfsstore')
 
 
         //Reload

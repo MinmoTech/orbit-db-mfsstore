@@ -8,7 +8,7 @@ class MfsIndex {
   constructor(ipfs, dbname) {
     this._dbname = dbname.path
     this._ipfs = ipfs 
-    this._handled = null 
+    this._handled = []
   }
 
   async get(key) {
@@ -59,8 +59,6 @@ class MfsIndex {
 
     await this.createStoreDirectory()
 
-    this._handled = []
-
     try {
       let bufferedContents = await toBuffer(this._ipfs.files.read(`/${this._dbname}/${HANDLED_FILENAME}`))  // a buffer
       this._handled = JSON.parse(bufferedContents.toString())
@@ -103,7 +101,6 @@ class MfsIndex {
 
       //If it's not been handled mark it
       if(!this._handled.includes(value.clock.time)) {
-        this._handled.push(value.clock.time)        
         toHandle.push(value)
       }
 
@@ -111,14 +108,14 @@ class MfsIndex {
     
     await this.handleItems(toHandle)
     
-
-    await this.saveHandled()
-
   }
 
   async handleItems(toHandle) {
 
     for (let item of toHandle) {
+
+      this._handled.push(item.clock.time)        
+
       if (item.payload.op === 'PUT') {
         await this.put(item.payload.key, item.payload.value)
       }
@@ -126,6 +123,9 @@ class MfsIndex {
         await this.remove(item.payload.key)
       }
     }
+
+    await this.saveHandled()
+
 
   }
 }
