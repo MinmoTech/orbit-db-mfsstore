@@ -92,28 +92,37 @@ describe('MfsStore', async () => {
         assert.equal(jim.name, "Jim")
         assert.equal(susan.name, "Susan")
 
+        //Check the count
+        count = await store.count()
+        assert.equal(count, 4)
+
 
     })
 
 
     it('should put many items and read', async () => {
 
-        console.time('Saving 200 records mfsstore')
-        for (let i=0; i< 200; i++) {
+        console.time('Saving 100 records mfsstore')
+        for (let i=0; i< 100; i++) {
             await store.put(i, {
                 id: i,
                 name: `Pat${i}`
             })
         }
-        console.timeEnd('Saving 200 records mfsstore')
+        console.timeEnd('Saving 100 records mfsstore')
+
+        //Check the count
+        let count = await store.count()
+        assert.equal(count, 100)
+
 
         //Act
-        console.time('Reading 200 records mfsstore')
-        for (let i=0; i< 200; i++) {
+        console.time('Reading 100 records mfsstore')
+        for (let i=0; i< 100; i++) {
             let value = await store.get(i)
             assert.equal(value.name, `Pat${i}`)
         }
-        console.timeEnd('Reading 200 records mfsstore')
+        console.timeEnd('Reading 100 records mfsstore')
 
 
         //Reload

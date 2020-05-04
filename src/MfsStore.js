@@ -55,6 +55,25 @@ class MfsStore extends Store {
     return super.load(amount)
   }
 
+
+  /**
+   * Drops a database and removes local data
+   * @return {[None]}
+   */
+  async drop () {
+    super.drop()
+
+    //Clear MFS
+    return this._index.drop()
+
+
+  }
+
+
+  async count() {
+    return this._index.count()
+  }
+
   async _updateIndex () {
     this._recalculateReplicationMax()
     await this._index.updateIndex(this._oplog)

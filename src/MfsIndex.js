@@ -1,6 +1,8 @@
 'use strict'
 
 const toBuffer = require('it-to-buffer')
+const all = require('it-all')
+
 
 const HANDLED_FILENAME = "_handled.json"
 
@@ -12,20 +14,17 @@ class MfsIndex {
   }
 
   async get(key) {
-    let content
 
     try {
 
-      let stat = await this._ipfs.files.stat(`/${this._dbname}/${key}.json`)
+      // let stat = await this._ipfs.files.stat(`/${this._dbname}/${key}.json`)
 
       let bufferedContents = await toBuffer(this._ipfs.files.read(`/${this._dbname}/${key}.json`))  // a buffer
-      content = bufferedContents.toString()
+      let content = bufferedContents.toString()
   
       return JSON.parse(content)
 
-    } catch(ex) {
-      console.log('here')
-    }
+    } catch(ex) {}
     
   }
 
@@ -52,6 +51,21 @@ class MfsIndex {
 
   async remove(key) {
     return this._ipfs.files.rm(`/${this._dbname}/${key}.json`)
+  }
+
+  async count() {
+
+    let stat = await this._ipfs.files.stat(`/${this._dbname}`)
+
+    const result = await all(this._ipfs.files.ls(`/${this._dbname}`))
+
+    console.log(result)
+
+    if (stat) {
+      return stat.blocks -1 //Don't count _handled.json
+    }
+
+    return 0
   }
 
 
@@ -128,6 +142,17 @@ class MfsIndex {
 
 
   }
+
+  async drop() {
+
+    try {
+      let stat = await this._ipfs.files.stat(`/${this._dbname}`)
+
+      return this._ipfs.files.rm(`/${this._dbname}`)
+    } catch(ex) {}
+    
+  }
+
 }
 
 module.exports = MfsIndex
