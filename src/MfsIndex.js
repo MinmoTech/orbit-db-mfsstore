@@ -17,12 +17,7 @@ class MfsIndex {
 
     try {
 
-      // let stat = await this._ipfs.files.stat(`/${this._dbname}/${key}.json`)
-
-      let bufferedContents = await toBuffer(this._ipfs.files.read(`/${this._dbname}/${key}.json`))  // a buffer
-      let content = bufferedContents.toString()
-  
-      return JSON.parse(content)
+      return this.getFileContent(`/${this._dbname}/${key}.json`)
 
     } catch(ex) {}
     
@@ -57,9 +52,10 @@ class MfsIndex {
 
     let stat = await this._ipfs.files.stat(`/${this._dbname}`)
 
-    const result = await all(this._ipfs.files.ls(`/${this._dbname}`))
+    // const result = await all(this._ipfs.files.ls(`/${this._dbname}`))
 
-    console.log(result)
+    // console.log(stat)
+    // console.log(result)
 
     if (stat) {
       return stat.blocks -1 //Don't count _handled.json
@@ -67,6 +63,35 @@ class MfsIndex {
 
     return 0
   }
+
+
+  async all(offset=0, limit=0) {
+
+    const fileList = await all(this._ipfs.files.ls(`/${this._dbname}`))
+
+    let results = []
+
+    limit = Math.max(fileList.length, offset+limit)
+
+    for (let i=offset; i < limit; i++ ) {
+
+      let file = fileList[i]
+
+      if (file.name == "_handled.json") continue
+
+      results.push(await this.getFileContent(`/${this._dbname}/${file.name}`))
+    }
+
+    return results
+
+  }
+
+  async getFileContent(filename) {
+    let bufferedContents = await toBuffer(this._ipfs.files.read(filename))  // a buffer
+    let content = bufferedContents.toString()
+    return JSON.parse(content)
+  }
+
 
 
   async loadHandled() {

@@ -23,6 +23,10 @@ class MfsStore extends Store {
     return this._index._index
   }
 
+  async all(offset, limit) {
+    return this._index.all(offset, limit)
+  }
+
   async get (key) {
     return this._index.get(key)
   }
