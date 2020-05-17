@@ -15,16 +15,18 @@ class MfsIndex {
 
   async get(key) {
 
+    let value 
+
     try {
-
-      return this.getFileContent(`/${this._dbname}/${key}.json`)
-
-    } catch(ex) {}
+      value = await this.getFileContent(`/${this._dbname}/${key}.json`)
+    } catch(ex) {
+    }
     
+    return value
+
   }
 
   async put(key, value) {
-
 
     //Need to remove any existing file for some reason. 
     //Occasionally without this the file would have the wrong contents. Not sure why.
@@ -32,11 +34,7 @@ class MfsIndex {
       await this._ipfs.files.rm(`/${this._dbname}/${key}.json`)
     } catch(ex) {}
 
-
-    let stringify = JSON.stringify(value)
-    let buffer = Buffer.from(stringify)
-    
-    return this._ipfs.files.write(`/${this._dbname}/${key}.json`, buffer, {
+    return this._ipfs.files.write(`/${this._dbname}/${key}.json`, JSON.stringify(value), {
       create: true
     })
 
@@ -49,38 +47,30 @@ class MfsIndex {
   }
 
   async count() {
-
-    let stat = await this._ipfs.files.stat(`/${this._dbname}`)
-
-    // const result = await all(this._ipfs.files.ls(`/${this._dbname}`))
-
-    // console.log(stat)
-    // console.log(result)
-
-    if (stat) {
-      return stat.blocks -1 //Don't count _handled.json
-    }
-
-    return 0
+    const fileList = await all(this._ipfs.files.ls(`/${this._dbname}`))
+    return fileList.length - 1 //Don't count _handled.json
   }
 
 
-  async all(offset=0, limit=0) {
+  async all(offset=0, limit=1000) {
 
-    const fileList = await all(this._ipfs.files.ls(`/${this._dbname}`))
+    const fileList = await this._ipfs.files.ls(`/${this._dbname}`)
+    
+    let count=0
 
     let results = []
 
-    limit = Math.max(fileList.length, offset+limit)
+    for await (const file of fileList) {
 
-    for (let i=offset; i < limit; i++ ) {
-
-      let file = fileList[i]
-
+      if (results.length >= limit) break 
       if (file.name == "_handled.json") continue
+      if (count < offset) continue 
 
       results.push(await this.getFileContent(`/${this._dbname}/${file.name}`))
+
+      count++ 
     }
+
 
     return results
 
@@ -88,8 +78,7 @@ class MfsIndex {
 
   async getFileContent(filename) {
     let bufferedContents = await toBuffer(this._ipfs.files.read(filename))  // a buffer
-    let content = bufferedContents.toString()
-    return JSON.parse(content)
+    return JSON.parse(bufferedContents.toString())
   }
 
 
@@ -117,11 +106,7 @@ class MfsIndex {
 
 
   async saveHandled() {
-    
-    let stringify = JSON.stringify(this._handled)
-    let buffer = Buffer.from(stringify)
-
-    await this._ipfs.files.write(`/${this._dbname}/${HANDLED_FILENAME}`, buffer, {
+    return this._ipfs.files.write(`/${this._dbname}/${HANDLED_FILENAME}`, JSON.stringify(this._handled), {
       create: true,
       parents: true
     })
@@ -139,8 +124,12 @@ class MfsIndex {
     for (let value of values) {
 
       //If it's not been handled mark it
-      if(!this._handled.includes(value.clock.time)) {
+      if(!this._handled.includes(value.hash)) {
         toHandle.push(value)
+
+        //We're actually going to have to include anything newer than this too or
+        //we'll end up applying old updates. 
+
       }
 
     }
@@ -151,9 +140,11 @@ class MfsIndex {
 
   async handleItems(toHandle) {
 
+    if (!toHandle || toHandle.length == 0) return 
+
     for (let item of toHandle) {
 
-      this._handled.push(item.clock.time)        
+      this._handled.push(item.hash)        
 
       if (item.payload.op === 'PUT') {
         await this.put(item.payload.key, item.payload.value)

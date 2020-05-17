@@ -134,4 +134,18 @@ describe('MfsStore', async () => {
 
     })
 
+
+    
+
+    it('should get all', async () => {
+
+        let all = await store.all()
+
+        assert.equal(all.length, 100)
+
+    })
+
+
+    
+
 })
