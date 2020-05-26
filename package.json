@@ -6,7 +6,7 @@
   "homepage": "https://gitlab.com/ptoner/orbit-db-mfsstore",
   "bugs": "https://gitlab.com/ptoner/orbit-db-mfsstore/issues",
   "scripts": {
-    "test": "mocha --timeout 100000"
+    "test": "mocha --timeout 1000000"
   },
   "keywords": [
     "orbit-db",
@@ -28,11 +28,13 @@
   "dependencies": {
     "orbit-db-store": "~3.1.0",
     "it-to-buffer": "1.0.2",
-    "it-all": "1.0.2"
+    "it-all": "1.0.2",
+    "btreejs": "0.3.0",
+    "fast-json-stable-stringify": "2.1.0"
   },
   "devDependencies": {
     "ipfs": "0.43.0",
     "mocha": "7.1.2",
-    "orbit-db": "0.23.1"
+    "orbit-db": "0.24.1"
   }
 }

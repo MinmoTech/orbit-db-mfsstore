@@ -5,11 +5,10 @@ const MfsIndex = require('./MfsIndex')
 
 class MfsStore extends Store {
   constructor(ipfs, id, dbname, options) {
-
     //Wrap the index in a wrapper to let us pass it the ipfs instance that we get
     class IndexWrapper extends MfsIndex {
       constructor() {
-        super(ipfs, dbname)
+        super(ipfs, dbname, options.schema)
       }
     }
  
@@ -23,8 +22,12 @@ class MfsStore extends Store {
     return this._index._index
   }
 
-  async all(offset, limit) {
-    return this._index.all(offset, limit)
+  async list(offset, limit) {
+    return this._index.list(offset, limit)
+  }
+
+  async getByIndex(indexName, value, limit, offset ) {
+    return this._index.getByIndex(indexName, value, limit, offset)
   }
 
   async get (key) {
@@ -54,7 +57,7 @@ class MfsStore extends Store {
   async load(amount) {
 
     //Load handled from MFS
-    await this._index.loadHandled()
+    await this._index.load()
 
     return super.load(amount)
   }
