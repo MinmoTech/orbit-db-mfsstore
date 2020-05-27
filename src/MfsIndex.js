@@ -3,11 +3,13 @@
 const toBuffer = require('it-to-buffer')
 const all = require('it-all')
 
-const BTree = require('./BTree')
-const stringify = require('fast-json-stable-stringify');
+const { SortedMap } = require('immutable-sorted')
+
+const stringify = require('fast-json-stable-stringify')
 
 
 const HANDLED_FILENAME = "_handled.json"
+const INDEX_MAPS_FILENAME = "_trees.json"
 
 class MfsIndex {
 
@@ -16,7 +18,7 @@ class MfsIndex {
     this._ipfs = ipfs
 
     this._handled = []
-    this._trees = {}
+    this._indexMaps = {}
     this._schema = schema
   }
 
@@ -37,20 +39,20 @@ class MfsIndex {
     let definition = this._schema[indexName]
     if (!definition) return []
 
-    let tree = await this._getTreeByName(indexName)
-    if (!tree) return []
+    let indexMap = await this._indexMaps[indexName]
+    if (!indexMap) return []
 
 
     let results = []
 
     if (definition.unique) {
 
-      let primaryKey = tree.get(value)
+      let primaryKey = indexMap.get(value)
       results.push(await this.get(primaryKey))
 
     } else {
 
-      let list = tree.get(value)
+      let list = indexMap.get(value)
       
       for (let primaryKey of list) {
         results.push(await this.get(primaryKey))
@@ -68,8 +70,10 @@ class MfsIndex {
     let existing = await this.get(key)
 
     for (let columnName in this._schema) {
-      await this._updateTree(columnName, key, value[columnName], existing ? existing[columnName] : undefined)
+      await this._updateMap(columnName, key, value[columnName], existing ? existing[columnName] : undefined)
     }
+
+    await this._flushIndexMaps()
 
     //Need to remove any existing file for some reason. 
     //Occasionally without this the file would have the wrong contents. Not sure why.
@@ -77,7 +81,7 @@ class MfsIndex {
       await this.remove(key)
     }
 
-    return this._ipfs.files.write(`/${this._dbname}/${key}.json`, stringify(value), {
+    await this._ipfs.files.write(`/${this._dbname}/${key}.json`, stringify(value), {
       create: true
     })
 
@@ -86,6 +90,16 @@ class MfsIndex {
 
 
   async remove(key) {
+
+    //Remove from all index trees
+    let existing = await this.get(key)
+
+    for (let columnName in this._schema) {
+      await this._updateMap(columnName, key, undefined, existing ? existing[columnName] : undefined)
+    }
+
+    await this._flushIndexMaps()
+
     return this._ipfs.files.rm(`/${this._dbname}/${key}.json`)
   }
 
@@ -131,7 +145,8 @@ class MfsIndex {
 
   async getFileContent(filename) {
     let bufferedContents = await toBuffer(this._ipfs.files.read(filename))  // a buffer
-    return JSON.parse(bufferedContents.toString())
+    let content = bufferedContents.toString()
+    return JSON.parse(content)
   }
 
 
@@ -203,13 +218,62 @@ class MfsIndex {
 
     try {
       //Load handled list
-      this._handled = await this.getFileContent(`/${this._dbname}/handled/${HANDLED_FILENAME}`)
+      this._handled = await this._loadHandled()
 
-      //Load btrees
-
-      //Load schema
+      //Load index maps
+      this._indexMaps = await this._loadIndexMaps()
 
     } catch (ex) { }
+  }
+
+  async _loadHandled() {
+
+    let handled = []
+
+    try {
+      handled = await this.getFileContent(`/${this._dbname}/handled/${HANDLED_FILENAME}`)
+    } catch (ex) { }
+
+    return handled
+  }
+
+  async _loadIndexMaps() {
+
+    let indexMaps = {}
+
+    try {
+      let loadedMaps = await this.getFileContent(`/${this._dbname}/indexMaps/${INDEX_MAPS_FILENAME}`)
+
+      for (let columnName in loadedMaps) {
+        indexMaps[columnName] = SortedMap(loadedMaps[columnName])
+      }
+
+    } catch(ex) {
+      for (let columnName in this._schema) {
+        indexMaps[columnName] = SortedMap()
+      }
+    }
+
+    return indexMaps
+  }
+
+  async _flushIndexMaps() {
+
+    // console.time(`Saving indexMaps`)
+
+    //Gotta delete before saving or it gets messed up
+    try {
+      let stat = await this._ipfs.files.stat(`/${this._dbname}/indexMaps/${INDEX_MAPS_FILENAME}`)
+      await this._ipfs.files.rm(`/${this._dbname}/indexMaps/${INDEX_MAPS_FILENAME}`)
+    } catch(ex) {}
+
+    await this._ipfs.files.write(`/${this._dbname}/indexMaps/${INDEX_MAPS_FILENAME}`, stringify(this._indexMaps), {
+      create: true,
+      parents: true
+    })
+
+    // console.timeEnd(`Saving indexMaps`)
+
   }
 
   async _createStoreDirectory() {
@@ -230,79 +294,27 @@ class MfsIndex {
   }
 
 
-  async saveBtree(name) {
 
-    let values = []
+  async _updateMap(mapName, primaryKey, mapKey, existingMapKey) {
 
-    let btree = this._trees[name]
+    const indexMap = this._indexMaps[mapName]
 
-    if (btree.tree.count() > 0) {
-      btree.tree.walkDesc(function (key, value) {
-        values[key] = value
-      })
-    }
-
-    return this._ipfs.files.write(`/${this._dbname}/trees/${name}.json`, stringify(values), {
-      create: true,
-      parents: true
-    })
-
-  }
-
-  async loadBtree(name) {
-
-    let btree = new BTree(this._ipfs)
-    let data = {}
-
-    try {
-      data = await this.getFileContent(`/${this._dbname}/trees/${name}.json`)
-    } catch (ex) {
-      // console.log(ex)
-    }
-
-    for (let key in data) {
-      btree.put(key, data[key])
-    }
-
-    return btree
-
-  }
-
-
-  async _getTreeByName(name) {
-
-    //If it's already loaded just return it.
-    if (this._trees[name]) {
-      return this._trees[name]
-    }
-
-    this._trees[name] = await this.loadBtree(name)
-
-    return this._trees[name]
-
-  }
-
-
-  async _updateTree(treeName, primaryKey, treeKey, existingTreeKey) {
-
-    const tree = await this._getTreeByName(treeName)
-
-    let definition = this._schema[treeName]
+    let definition = this._schema[mapName]
 
     //The key is the value of the indexed field. 
-    // let treeKey = value ? value[indexName] : null
+    // let mapKey = value ? value[indexName] : null
 
 
     if (definition.unique) {
 
-      if (treeKey) {
+      if (mapKey) {
       
-        tree.put(treeKey, primaryKey)
+        this._indexMaps[mapName] = indexMap.set(mapKey, primaryKey)
       
       } else {
 
-        if (existingTreeKey) {
-          tree.del(existingTreeKey)
+        if (existingMapKey) {
+          indexMap.delete(existingMapKey)
         }
 
       }
@@ -310,12 +322,12 @@ class MfsIndex {
     } else {
 
       //Otherwise we're storing a list of values. Append this to it.
-      let isNew = ( !existingTreeKey && treeKey)
-      let isChanged = ( !isNew && ( treeKey != existingTreeKey ) )
+      let isNew = ( !existingMapKey && mapKey)
+      let isChanged = ( !isNew && ( mapKey != existingMapKey ) )
 
-      if (existingTreeKey && isChanged) {
+      if (existingMapKey && isChanged) {
         //Remove from current list
-        let currentList = tree.get(existingTreeKey)
+        let currentList = indexMap.get(existingMapKey)
 
         let currentIndex = currentList.indexOf(primaryKey)
 
@@ -326,12 +338,12 @@ class MfsIndex {
       }
 
       //If there's an actual value then insert it
-      if (treeKey && (isChanged || isNew)) {
-        let currentList = tree.get(treeKey)
+      if (mapKey && (isChanged || isNew)) {
+        let currentList = indexMap.get(mapKey)
 
         if (!currentList) {
           currentList = [] 
-          tree.put(treeKey, currentList)
+          this._indexMaps[mapName] = indexMap.set(mapKey, currentList)
         }
 
         currentList.push(primaryKey)
@@ -339,8 +351,6 @@ class MfsIndex {
       }
 
     }
-
-    await this.saveBtree(treeName)
 
   }
 

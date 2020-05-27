@@ -29,7 +29,7 @@
     "orbit-db-store": "~3.1.0",
     "it-to-buffer": "1.0.2",
     "it-all": "1.0.2",
-    "btreejs": "0.3.0",
+    "immutable-sorted": "0.2.11",
     "fast-json-stable-stringify": "2.1.0"
   },
   "devDependencies": {

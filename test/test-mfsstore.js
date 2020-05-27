@@ -25,11 +25,10 @@ describe('MfsStore', async () => {
             create: true, 
             type: "mfsstore",
             schema: {
-                id: { unique: true, type: 'number' },
-                name: { unique: false, type: 'string' },
-                currentTeam: { unique: false, type: 'string'},
-                battingHand: { unique: false, type: 'string'},
-                throwingHand: { unique: false, type: 'string'}
+                name: { unique: false },
+                currentTeam: { unique: false },
+                battingHand: { unique: false },
+                throwingHand: { unique: false }
             }
 
             
@@ -43,23 +42,6 @@ describe('MfsStore', async () => {
     })
 
 
-
-    // it('should store without orbit', async () => {
-
-    //     for (let i=0; i< 1000; i++) {
-    //         console.log(`test ${i}`)
-            
-    //         let buffer = Buffer.from(JSON.stringify({
-    //             name: "test" + i
-    //         }))
-
-    //         await ipfs.files.write(`/test/${i}.json`, buffer, {
-    //           create: true,
-    //           parents: true
-    //         })
-    //     }
-
-    // })
 
 
 
@@ -108,52 +90,34 @@ describe('MfsStore', async () => {
     })
 
 
-    // it('should put many items and read', async () => {
+    it('should put many items and read', async () => {
 
-    //     console.time('Putting 100 records in mfsstore')
-    //     for (let i=0; i< 100; i++) {
-    //         console.log(`Putting ${i} of 100`)
-    //         await store.put(i, {
-    //             id: i,
-    //             name: `Pat${i}`
-    //         })
-    //     }
-    //     console.timeEnd('Putting 100 records in mfsstore')
+        console.time('Putting 25 records in mfsstore')
+        for (let i=0; i< 25; i++) {
+            await store.put(i, {
+                id: i,
+                name: `Pat${i}`
+            })
+        }
+        console.timeEnd('Putting 25 records in mfsstore')
 
-    //     //Check the count
-    //     let count = await store.count()
-    //     assert.equal(count, 100)
+        //Check the count
+        let count = await store.count()
+        assert.equal(count, 25)
 
 
-    //     //Act
-    //     console.time('Reading 100 records mfsstore')
-    //     for (let i=0; i< 100; i++) {
-    //         let value = await store.get(i)
-    //         assert.equal(value.name, `Pat${i}`)
-    //     }
-    //     console.timeEnd('Reading 100 records mfsstore')
-
-    // })
-
-    it('should close and reload', async () => {
-
-        //Reload
-        console.time('Reload mfsstore')
-        await store.close()
-        await store.load()
-        console.timeEnd('Reload mfsstore')
+        //Act
+        console.time('Reading 25 records mfsstore')
+        for (let i=0; i< 25; i++) {
+            let value = await store.get(i)
+            assert.equal(value.name, `Pat${i}`)
+        }
+        console.timeEnd('Reading 25 records mfsstore')
 
     })
 
 
 
-    it('should get all', async () => {
-
-        let all = await store.list()
-
-        assert.equal(all.length, 4)
-
-    })
 
 
     it('should retreive values by secondary indexes', async () => {
@@ -262,30 +226,33 @@ describe('MfsStore', async () => {
         let battingL = await store.getByIndex("battingHand", "L", 100, 0)
         let throwingR = await store.getByIndex("throwingHand", "R", 100, 0)
 
-        let inTeamIndex = false
-        let inBattingIndex = false
-        let inThrowingIndex = false
-
-        for (let team of teamPIT) {
-            if (team.id == 103) inTeamIndex = true
-        }
-
-        for (let bats of battingL) {
-            if (bats.id == 103) inBattingIndex = true
-        }
-
-        for (let throws of throwingR) {
-            if (throws.id == 103) inThrowingIndex = true
-        }
-
 
         assert.equal(jordy, undefined)
-        assert.equal(inTeamIndex, false)
-        assert.equal(inBattingIndex, false)
-        assert.equal(inThrowingIndex, false)
+        assert.equal(teamPIT.filter(player => player.id == 103).length, 0)
+        assert.equal(battingL.filter(player => player.id == 103).length, 0)
+        assert.equal(throwingR.filter(player => player.id == 103).length, 0)
 
 
     })
+
+    it('should close and reload', async () => {
+
+        //Reload
+        console.time('Reload mfsstore')
+        await store.close()
+        await store.load()
+        console.timeEnd('Reload mfsstore')
+
+        let all = await store.list()
+        let battingL = await store.getByIndex("battingHand", "L", 100, 0)
+
+        assert.equal(all.length, 28)
+
+        assert.equal(battingL[0].name, "Doug Drabek")
+        assert.equal(battingL[1].name, "Andrew McCutchen")
+
+    })
+
 
 
 })
