@@ -5,7 +5,7 @@
 
 > Key-Value database for orbit-db backed by IPFS MFS.
 
-A key-value database just like your favourite key-value database. Backed by MFS.
+A key-value database backed by the IPFS Mutable File System. Also allows indexing and searching by non-primary indexes. Unlike other orbit-db stores it does not load the entire dataset into memory. Each store uses a schema and when records are inserted we build btree indexes. They get built and stored locally. 
 
 Used in [orbit-db](https://github.com/haadcode/orbit-db).
 
@@ -19,7 +19,7 @@ Used in [orbit-db](https://github.com/haadcode/orbit-db).
 
 ## Install
 ```
-npm install orbit-db ipfs
+npm install orbit-db ipfs orbit-db-mfsstore
 ```
 
 ## Usage
@@ -27,6 +27,7 @@ npm install orbit-db ipfs
 First, create an instance of OrbitDB:
 
 ```javascript
+const MfsStore = require('orbit-db-mfsstore')
 const IPFS = require('ipfs')
 const OrbitDB = require('orbit-db')
 
@@ -40,20 +41,75 @@ Add custom datastore type
 OrbitDB.addDatabaseType("mfsstore", MfsStore)
 ```
 
-Get a key-value database and add an entry to it:
+Create a datastore with a schema. In this example we're saving baseball players. We'll add 4 different indexed fields. Indexes and can unique. 
 
 ```javascript
-const store = await orbitdb.open("test", {
-            create: true, 
-            type: "mfsstore"
+store = await orbitdb.open("baseballplayers", {
+    create: true, 
+    type: "mfsstore",
+    schema: {
+        name: { unique: false },
+        currentTeam: { unique: false },
+        battingHand: { unique: false },
+        throwingHand: { unique: false }
+    }
 })
+```
 
-kv.put('volume', '100')
-  .then(() => {
-    console.log(kv.get('volume'))
-    // 100
+Add a record and retreive it by the primary key
+```javascript
+
+
+  //Save it
+  await store.put(101, {
+      name: "Andrew McCutchen",
+      currentTeam: "PIT",
+      battingHand: "R",
+      throwingHand: "R"
+  })
+
+
+  //Retreive it
+  let player = await store.get(101)
+
+
+```
+
+Now we're going to add a few more players
+
+```javascript
+  await store.put(102, {
+    id: 102,
+    name: "Pedro Alvarez",
+    currentTeam: "BAL",
+    battingHand: "R",
+    throwingHand: "R"
+  })
+
+  await store.put(103, {
+      id: 103,
+      name: "Jordy Mercer",
+      currentTeam: "PIT",
+      battingHand: "L",
+      throwingHand: "R"
+  })
+
+  await store.put(104, {
+      id: 104,
+      name: "Doug Drabek",
+      currentTeam: "BAL",
+      battingHand: "L",
+      throwingHand: "R"
   })
 ```
+
+Now retreive the values by the secondary indexes. 
+
+```javascript
+  let teamPIT = await store.getByIndex("currentTeam", "PIT", "desc", 0, 100)
+```
+
+
 
 
 ```

@@ -26,8 +26,8 @@ class MfsStore extends Store {
     return this._index.list(offset, limit)
   }
 
-  async getByIndex(indexName, value, limit, offset ) {
-    return this._index.getByIndex(indexName, value, limit, offset)
+  async getByIndex(indexName, value, sortDirection, offset, limit ) {
+    return this._index.getByIndex(indexName, value, sortDirection, offset, limit )
   }
 
   async get (key) {

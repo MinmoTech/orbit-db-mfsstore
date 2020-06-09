@@ -20,6 +20,7 @@ class MfsIndex {
     this._handled = []
     this._indexMaps = {}
     this._schema = schema
+
   }
 
   async get(key) {
@@ -34,31 +35,68 @@ class MfsIndex {
 
   }
 
-  async getByIndex(indexName, value, limit=1, offset=0 ) {
+  async getByIndex(indexName, value, sortDirection, offset=0, limit=1 ) {
 
     let definition = this._schema[indexName]
     if (!definition) return []
 
-    let indexMap = await this._indexMaps[indexName]
+    let indexMap = this._indexMaps[indexName]
     if (!indexMap) return []
-
 
     let results = []
 
-    if (definition.unique) {
+    let primaryKeys = []
 
-      let primaryKey = indexMap.get(value)
-      results.push(await this.get(primaryKey))
 
+    if (value) {
+
+      if (definition.unique) {
+
+        let primaryKey = indexMap.get(value)
+        primaryKeys.push(primaryKey)
+  
+      } else {
+  
+        let list = indexMap.get(value)
+        
+        for (let primaryKey of list) {
+          primaryKeys.push(primaryKey)
+        }
+  
+      }
+  
     } else {
 
-      let list = indexMap.get(value)
-      
-      for (let primaryKey of list) {
-        results.push(await this.get(primaryKey))
+      //Return all
+      primaryKeys = Object.keys(indexMap.toSeq().toJS())
+    }
+
+
+    //Sort
+    primaryKeys.sort()
+    if (sortDirection == "asc") primaryKeys.reverse()
+
+
+
+    //Look up actual values
+    let count = 0
+
+    for (let primaryKey of primaryKeys) {
+
+      if (results.length >= limit) break
+
+      if (count < offset) {
+        count++
+        continue
+      } else {
+        count++
       }
 
+      results.push(await this.get(primaryKey))
+
     }
+
+
 
     return results
 
@@ -115,7 +153,9 @@ class MfsIndex {
 
   async list(offset = 0, limit = 1000) {
 
-    const fileList = await this._ipfs.files.ls(`/${this._dbname}`)
+    const fileList = await this._ipfs.files.ls(`/${this._dbname}`, {
+      sort: true
+    })
 
     let count = 0
 
@@ -263,7 +303,7 @@ class MfsIndex {
 
     //Gotta delete before saving or it gets messed up
     try {
-      let stat = await this._ipfs.files.stat(`/${this._dbname}/indexMaps/${INDEX_MAPS_FILENAME}`)
+      // let stat = await this._ipfs.files.stat(`/${this._dbname}/indexMaps/${INDEX_MAPS_FILENAME}`)
       await this._ipfs.files.rm(`/${this._dbname}/indexMaps/${INDEX_MAPS_FILENAME}`)
     } catch(ex) {}
 
@@ -298,8 +338,10 @@ class MfsIndex {
   async _updateMap(mapName, primaryKey, mapKey, existingMapKey) {
 
     const indexMap = this._indexMaps[mapName]
+    if (!indexMap) return 
 
     let definition = this._schema[mapName]
+    if (!definition) return 
 
     //The key is the value of the indexed field. 
     // let mapKey = value ? value[indexName] : null

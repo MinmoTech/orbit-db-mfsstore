@@ -114,6 +114,10 @@ describe('MfsStore', async () => {
         }
         console.timeEnd('Reading 25 records mfsstore')
 
+
+        count = await store.count()
+        assert.equal(count, 25)
+
     })
 
 
@@ -158,14 +162,13 @@ describe('MfsStore', async () => {
 
     
         //Act
-        let teamPIT = await store.getByIndex("currentTeam", "PIT", 100, 0)
-        let teamBAL = await store.getByIndex("currentTeam", "BAL", 100, 0)
+        let teamPIT = await store.getByIndex("currentTeam", "PIT", "desc", 0, 100)
+        let teamBAL = await store.getByIndex("currentTeam", "BAL", "desc", 0, 100)
 
-        let battingR = await store.getByIndex("battingHand", "R", 100, 0)
-        let battingL = await store.getByIndex("battingHand", "L", 100, 0)
+        let battingR = await store.getByIndex("battingHand", "R", "desc", 0, 100)
+        let battingL = await store.getByIndex("battingHand", "L","desc", 0, 100)
 
-        let throwingR = await store.getByIndex("throwingHand", "R", 100, 0)
-
+        let throwingR = await store.getByIndex("throwingHand", "R", "desc", 0, 100)
 
         //Teams
         assert.equal(teamPIT[0].name, "Andrew McCutchen")
@@ -204,13 +207,15 @@ describe('MfsStore', async () => {
 
 
         //Assert
-        let battingR = await store.getByIndex("battingHand", "R", 100, 0)
-        let battingL = await store.getByIndex("battingHand", "L", 100, 0)
+        let battingR = await store.getByIndex("battingHand", "R", "desc", 0, 100)
+        let battingL = await store.getByIndex("battingHand", "L", "desc", 0, 100)
+
+
 
         assert.equal(battingR.length, 1)
         assert.equal(battingR[0].id != 101, true)
 
-        assert.equal(battingL[2].id, 101)
+        assert.equal(battingL[0].id, 101)
 
     })
 
@@ -222,9 +227,9 @@ describe('MfsStore', async () => {
 
         //Assert
         let jordy = await store.get(103)
-        let teamPIT = await store.getByIndex("currentTeam", "PIT", 100, 0)
-        let battingL = await store.getByIndex("battingHand", "L", 100, 0)
-        let throwingR = await store.getByIndex("throwingHand", "R", 100, 0)
+        let teamPIT = await store.getByIndex("currentTeam", "PIT", "desc", 0, 100)
+        let battingL = await store.getByIndex("battingHand", "L", "desc", 0, 100)
+        let throwingR = await store.getByIndex("throwingHand", "R", "desc", 0, 100)
 
 
         assert.equal(jordy, undefined)
@@ -244,12 +249,12 @@ describe('MfsStore', async () => {
         console.timeEnd('Reload mfsstore')
 
         let all = await store.list()
-        let battingL = await store.getByIndex("battingHand", "L", 100, 0)
+        let battingL = await store.getByIndex("battingHand", "L", "desc", 0, 100)
 
         assert.equal(all.length, 28)
 
-        assert.equal(battingL[0].name, "Doug Drabek")
-        assert.equal(battingL[1].name, "Andrew McCutchen")
+        assert.equal(battingL[0].name, "Andrew McCutchen")
+        assert.equal(battingL[1].name, "Doug Drabek")
 
     })
 
