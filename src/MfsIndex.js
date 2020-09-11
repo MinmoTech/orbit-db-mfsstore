@@ -144,7 +144,6 @@ class MfsIndex {
   async count() {
     const fileList = await all(this._ipfs.files.ls(`/${this._dbname}`))
 
-
     let records = fileList.filter(file => file.type==0).length
 
     return records//Don't count _handled.json
@@ -218,7 +217,6 @@ class MfsIndex {
   }
 
   async handleItems(toHandle) {
-
     if (!toHandle || toHandle.length == 0) return
 
     for (let item of toHandle) {
@@ -299,8 +297,6 @@ class MfsIndex {
 
   async _flushIndexMaps() {
 
-    // console.time(`Saving indexMaps`)
-
     //Gotta delete before saving or it gets messed up
     try {
       // let stat = await this._ipfs.files.stat(`/${this._dbname}/indexMaps/${INDEX_MAPS_FILENAME}`)
@@ -311,8 +307,6 @@ class MfsIndex {
       create: true,
       parents: true
     })
-
-    // console.timeEnd(`Saving indexMaps`)
 
   }
 

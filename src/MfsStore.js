@@ -94,16 +94,15 @@ class MfsStore extends Store {
   }
 
   async _addOperation (data, { onProgressCallback, pin = false } = {}) {
+
     if (this._oplog) {
       // check local cache?
       if (this.options.syncLocal) {
         await this.syncLocal()
       }
-
       const entry = await this._oplog.append(data, this.options.referenceCount, pin)
       this._recalculateReplicationStatus(this.replicationStatus.progress + 1, entry.clock.time)
       await this._cache.set(this.localHeadsPath, [entry])
-
       await this._updateIndexEntry(entry)
       
       this.events.emit('write', this.address.toString(), entry, this._oplog.heads)

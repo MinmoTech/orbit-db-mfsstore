@@ -106,7 +106,14 @@ Now we're going to add a few more players
 Now retreive the values by the secondary indexes. 
 
 ```javascript
+  
+  //Get players who play for PIT
   let teamPIT = await store.getByIndex("currentTeam", "PIT", "desc", 0, 100)
+
+  //Get players who who bat right handed. 
+  let battingR = await store.getByIndex("battingHand", "R", "desc", 0, 100)
+
+
 ```
 
 
