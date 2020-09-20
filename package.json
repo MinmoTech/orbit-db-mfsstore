@@ -1,6 +1,6 @@
 {
   "name": "orbit-db-mfsstore",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "MFS backed Key-Value Store for orbit-db",
   "main": "src/MfsStore.js",
   "homepage": "https://gitlab.com/ptoner/orbit-db-mfsstore",
@@ -26,14 +26,14 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "orbit-db-store": "~3.1.0",
+    "orbit-db-store": "4.0.1",
     "it-to-buffer": "1.0.2",
     "it-all": "1.0.2",
     "immutable-sorted": "0.2.11",
     "fast-json-stable-stringify": "2.1.0"
   },
   "devDependencies": {
-    "ipfs": "0.43.0",
+    "ipfs": "0.50.2",
     "mocha": "7.1.2",
     "orbit-db": "0.24.1"
   }
