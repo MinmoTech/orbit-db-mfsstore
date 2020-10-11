@@ -4,6 +4,7 @@ const Store = require('orbit-db-store')
 const MfsIndex = require('./MfsIndex')
 
 class MfsStore extends Store {
+
   constructor(ipfs, id, dbname, options) {
     //Wrap the index in a wrapper to let us pass it the ipfs instance that we get
     class IndexWrapper extends MfsIndex {

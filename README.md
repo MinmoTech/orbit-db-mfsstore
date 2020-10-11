@@ -116,14 +116,34 @@ Now retreive the values by the secondary indexes.
 
 ```
 
-
-
-
-```
-
 ## API
 
 See [orbit-db's API Documenations](https://github.com/haadcode/orbit-db/blob/master/API.md#kvstorename) for full details.
+
+An MFSStore has the following additional functions:
+
+### store.list(offset, limit)
+* Returns a subset of the available records based on the offset and limit. Allows for paging.
+
+```javascript
+//Returns the recordset starting at the first record. Returns 100 records.
+let result = await store.list(0, 100)
+```
+
+### store.getByIndex(indexName, value, sortDirection, offset, limit )
+* Returns a subset of records stored in the index that match the passed in value. Offset and limit allow for paging.
+
+```javascript
+//Returns the recordset of records where the currentTeam attribute is set to "PIT". Sorts the records in descending order and starts at the first record. Returns 100 records.
+let result = await store.getByIndex("currentTeam", "PIT", "desc", 0, 100 )
+```
+
+### store.count()
+* Returns the total number of records stored in the store. Does not load the actual records into memory.
+
+```javascript
+let count = await store.count()
+```
 
 ## Contributing
 
