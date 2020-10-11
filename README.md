@@ -134,7 +134,9 @@ let result = await store.list(0, 100)
 * Returns a subset of records stored in the index that match the passed in value. Offset and limit allow for paging.
 
 ```javascript
-//Returns the recordset of records where the currentTeam attribute is set to "PIT". Sorts the records in descending order and starts at the first record. Returns 100 records.
+//Returns the recordset of records where the currentTeam attribute is set to "PIT". 
+//Sorts the records in descending order and starts at the first record. 
+//Returns 100 records.
 let result = await store.getByIndex("currentTeam", "PIT", "desc", 0, 100 )
 ```
 
