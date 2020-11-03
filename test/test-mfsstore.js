@@ -24,14 +24,14 @@ describe('MfsStore', async () => {
         store = await orbitdb.open("testtable", {
             create: true, 
             type: "mfsstore",
-            schema: {
-                name: { unique: false },
-                currentTeam: { unique: false },
-                battingHand: { unique: false },
-                throwingHand: { unique: false }
-            }
-
-            
+            options: {
+                schema: {
+                    name: { unique: false },
+                    currentTeam: { unique: false },
+                    battingHand: { unique: false },
+                    throwingHand: { unique: false }
+                }
+            }            
         })
 
         await store.load()
