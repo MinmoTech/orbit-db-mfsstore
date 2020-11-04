@@ -11,7 +11,7 @@ var TestIpfs = require('./ipfs')
 describe('MfsStore', async () => {
 
     let store
-    let ipfs 
+    let ipfs
     let orbitdb
 
     before('Setup', async () => {
@@ -22,16 +22,15 @@ describe('MfsStore', async () => {
 
         orbitdb = await OrbitDB.createInstance(ipfs)
         store = await orbitdb.open("testtable", {
-            create: true, 
+            create: true,
             type: "mfsstore",
-            options: {
-                schema: {
-                    name: { unique: false },
-                    currentTeam: { unique: false },
-                    battingHand: { unique: false },
-                    throwingHand: { unique: false }
-                }
-            }            
+            schema: {
+                name: { unique: false },
+                currentTeam: { unique: false },
+                battingHand: { unique: false },
+                throwingHand: { unique: false }
+            }
+
         })
 
         await store.load()
@@ -93,7 +92,7 @@ describe('MfsStore', async () => {
     it('should put many items and read', async () => {
 
         console.time('Putting 25 records in mfsstore')
-        for (let i=0; i< 25; i++) {
+        for (let i = 0; i < 25; i++) {
             await store.put(i, {
                 id: i,
                 name: `Pat${i}`
@@ -108,7 +107,7 @@ describe('MfsStore', async () => {
 
         //Act
         console.time('Reading 25 records mfsstore')
-        for (let i=0; i< 25; i++) {
+        for (let i = 0; i < 25; i++) {
             let value = await store.get(i)
             assert.equal(value.name, `Pat${i}`)
         }
@@ -160,13 +159,13 @@ describe('MfsStore', async () => {
             throwingHand: "R"
         })
 
-    
+
         //Act
         let teamPIT = await store.getByIndex("currentTeam", "PIT", "desc", 0, 100)
         let teamBAL = await store.getByIndex("currentTeam", "BAL", "desc", 0, 100)
 
         let battingR = await store.getByIndex("battingHand", "R", "desc", 0, 100)
-        let battingL = await store.getByIndex("battingHand", "L","desc", 0, 100)
+        let battingL = await store.getByIndex("battingHand", "L", "desc", 0, 100)
 
         let throwingR = await store.getByIndex("throwingHand", "R", "desc", 0, 100)
 
@@ -180,7 +179,7 @@ describe('MfsStore', async () => {
         //Batting
         assert.equal(battingR[0].name, "Andrew McCutchen")
         assert.equal(battingR[1].name, "Pedro Alvarez")
-        
+
         assert.equal(battingL[0].name, "Jordy Mercer")
         assert.equal(battingL[1].name, "Doug Drabek")
 
@@ -195,7 +194,7 @@ describe('MfsStore', async () => {
 
 
     it('should update a row from one secondary index to another', async () => {
-        
+
         //Act
         await store.put(101, {
             id: 101,

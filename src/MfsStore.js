@@ -9,7 +9,7 @@ class MfsStore extends Store {
     //Wrap the index in a wrapper to let us pass it the ipfs instance that we get
     class IndexWrapper extends MfsIndex {
       constructor() {
-        super(ipfs, dbname, options.options.schema)
+        super(ipfs, dbname, options.schema)
       }
     }
  
