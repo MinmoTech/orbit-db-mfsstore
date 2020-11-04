@@ -37,6 +37,8 @@ class MfsIndex {
 
   async getByIndex(indexName, value, sortDirection, offset=0, limit=1 ) {
 
+    if (!this._schema) return []
+
     let definition = this._schema[indexName]
     if (!definition) return []
 

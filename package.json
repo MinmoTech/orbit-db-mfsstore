@@ -1,6 +1,6 @@
 {
   "name": "orbit-db-mfsstore",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "MFS backed Key-Value Store for orbit-db",
   "main": "src/MfsStore.js",
   "homepage": "https://gitlab.com/ptoner/orbit-db-mfsstore",
