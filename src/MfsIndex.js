@@ -146,7 +146,7 @@ class MfsIndex {
   async count() {
     const fileList = await all(this._ipfs.files.ls(`/${this._dbname}`))
 
-    let records = fileList.filter(file => file.type==0).length
+    let records = fileList.filter(file => file.type=='file').length
 
     return records//Don't count _handled.json
   }
@@ -165,7 +165,7 @@ class MfsIndex {
     for await (const file of fileList) {
 
       if (results.length >= limit) break
-      if (file.type == 1) continue
+      if (file.type == 'directory') continue
 
       if (count < offset) {
         count++
@@ -185,9 +185,8 @@ class MfsIndex {
   }
 
   async getFileContent(filename) {
-    let bufferedContents = await toBuffer(this._ipfs.files.read(filename))  // a buffer
-    let content = bufferedContents.toString()
-    return JSON.parse(content)
+    let bufferedContents = await toBuffer(this._ipfs.files.read(filename)) 
+    return JSON.parse(bufferedContents.toString())
   }
 
 
