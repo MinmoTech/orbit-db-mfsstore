@@ -1,6 +1,6 @@
 {
   "name": "orbit-db-mfsstore",
-  "version": "0.0.9",
+  "version": "0.0.11",
   "description": "MFS backed Key-Value Store for orbit-db",
   "main": "src/MfsStore.js",
   "homepage": "https://gitlab.com/ptoner/orbit-db-mfsstore",
@@ -12,8 +12,7 @@
     "orbit-db",
     "orbitdb",
     "kv",
-    "key-value",
-    "kv-store"
+    "key-value"  
   ],
   "author": "Patrick Toner",
   "contributors": [],

@@ -238,12 +238,16 @@ class MfsIndex {
   }
 
   async drop() {
+    return this._ipfs.files.rm(`/${this._dbname}`, {
+      recursive: true
+    })
 
-    try {
-      let stat = await this._ipfs.files.stat(`/${this._dbname}`)
 
-      return this._ipfs.files.rm(`/${this._dbname}`)
-    } catch (ex) { }
+    // try {
+    //   // let stat = await this._ipfs.files.stat(`/${this._dbname}`)
+
+
+    // } catch (ex) { }
 
   }
 

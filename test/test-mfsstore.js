@@ -257,6 +257,21 @@ describe('MfsStore', async () => {
 
     })
 
+    it('should drop a store', async () => {
+
+        await store.drop()
+        await store.close()
+
+        await store.load()
+        let all = await store.list()
+
+        assert.equal(all.length, 0)
+
+        //Check handled and index maps
+
+
+    })
+
 
 
 })
